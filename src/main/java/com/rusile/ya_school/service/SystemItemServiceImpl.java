@@ -2,6 +2,7 @@ package com.rusile.ya_school.service;
 
 import com.rusile.ya_school.dao.SystemItemRepository;
 import com.rusile.ya_school.entity.SystemItem;
+import com.rusile.ya_school.entity.SystemItemHistory;
 import com.rusile.ya_school.entity.enums.Type;
 import com.rusile.ya_school.exception.NotFoundElementException;
 import com.rusile.ya_school.http_classes.SystemItemHistoryResponse;
@@ -25,10 +26,13 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     private final DataValidator validator;
 
+    private final SystemItemHistoryServiceImpl systemItemHistoryService;
+
     @Autowired
-    public SystemItemServiceImpl(SystemItemRepository systemItemRepository, DataValidator validator) {
+    public SystemItemServiceImpl(SystemItemRepository systemItemRepository, DataValidator validator, SystemItemHistoryServiceImpl systemItemHistoryService) {
         this.systemItemRepository = systemItemRepository;
         this.validator = validator;
+        this.systemItemHistoryService = systemItemHistoryService;
     }
 
     @Override
@@ -68,6 +72,10 @@ public class SystemItemServiceImpl implements SystemItemService {
         addNewFolders(requestSystemItems, date, updates);
 
         addRemainingFilesAndFolders(requestSystemItems, updates, date);
+
+        systemItemHistoryService.save(systemItemRepository.findAllByDate(date).stream()
+                .map(SystemItemHistory::valueOf)
+                .collect(Collectors.toList()));
     }
 
     @Override
@@ -90,9 +98,7 @@ public class SystemItemServiceImpl implements SystemItemService {
         List<SystemItem> items = systemItemRepository.findAllByDateBetween(date.minus(24, ChronoUnit.HOURS), date);
         SystemItemHistoryResponse response = new SystemItemHistoryResponse();
         Set<SystemItemHistoryUnit> units = new HashSet<>();
-        items.forEach(p -> {
-            units.add(SystemItemHistoryUnit.valueOf(p));
-        });
+        items.forEach(p -> units.add(SystemItemHistoryUnit.valueOf(p)));
         response.setItems(units);
         return response;
     }
@@ -109,11 +115,13 @@ public class SystemItemServiceImpl implements SystemItemService {
                 long oldSize = oldItem.getSize();
                 if (item.getType().equals(Type.FOLDER)) {
                     item.setSize(oldSize);
+                    newSize=oldSize;
                 }
-                if (newParentID != null && !newParentID.equals(oldParentID) || (newParentID == null && oldParentID != null)) {
-                    recursivelyUpdateNodes(oldParentID, -oldSize, date);
-                    recursivelyUpdateNodes(newParentID, newSize, date);
-                } else if (oldSize != newSize) {
+                if (!Objects.equals(newParentID, oldParentID)) {
+                    if (newParentID != null) recursivelyUpdateNodes(newParentID, newSize, date);
+                    if (oldParentID != null) recursivelyUpdateNodes(oldParentID, -oldSize, date);
+                //if (newParentID != null && !newParentID.equals(oldParentID) || (newParentID == null && oldParentID != null)) {
+                } else {
                     long offset = newSize - oldSize;
                     recursivelyUpdateNodes(newParentID, offset, date);
                 }

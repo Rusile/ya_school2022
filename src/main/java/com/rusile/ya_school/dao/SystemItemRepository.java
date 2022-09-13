@@ -9,5 +9,6 @@ import java.util.List;
 
 @Repository
 public interface SystemItemRepository extends JpaRepository<SystemItem, String> {
-    List<SystemItem> findAllByDateBetween(Instant after, Instant before);
+    List<SystemItem> findAllByDateBetween(Instant dateStart, Instant dateEnd);
+    List<SystemItem> findAllByDate(Instant date);
 }

@@ -1,5 +1,6 @@
 package com.rusile.ya_school.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rusile.ya_school.entity.enums.Type;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,6 +50,12 @@ public class SystemItem {
     @Setter
     @OneToMany(mappedBy = "parentId", cascade = CascadeType.ALL)
     private Set<SystemItem> children;
+
+    @JsonIgnore
+    @Getter
+    @Setter
+    @OneToMany(mappedBy = "ownerItem", cascade = CascadeType.ALL)
+    private Set<SystemItemHistory> history;
 
     public Set<SystemItem> getChildren() {
         if (type == Type.FILE) {

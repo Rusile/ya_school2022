@@ -1,14 +1,17 @@
 package com.rusile.ya_school.exception_handler;
 
 import com.rusile.ya_school.exception.BadSizeIdException;
+import com.rusile.ya_school.exception.IllegalDateIntervalException;
 import com.rusile.ya_school.exception.NotFoundElementException;
 import com.rusile.ya_school.exception.ValidationException;
 import com.rusile.ya_school.exception.messages.ExceptionMessageEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.rusile.ya_school.http_classes.Error;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import java.util.Iterator;
@@ -20,10 +23,23 @@ import java.util.Set;
 @ControllerAdvice
 public class RestResponseExceptionHandler {
 
-//    @ExceptionHandler(value = IllegalArgumentException.class)
-//    protected ResponseEntity<Error> handleImportValidationExc(RuntimeException ex) {
-//return new Error()
-//    }
+    @ExceptionHandler(value = IllegalDateIntervalException.class)
+    protected ResponseEntity<Error> handleImportValidationExc(IllegalDateIntervalException ex) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), ExceptionMessageEnum.BAD_DATE_INTERVAL.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = MissingServletRequestParameterException.class)
+    protected ResponseEntity<Error> handleMissingArgExc(MissingServletRequestParameterException ex) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
+    protected ResponseEntity<Error> handleArgTypeExc(MethodArgumentTypeMismatchException ex) {
+        Error error = new Error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(value = ValidationException.class)
     protected ResponseEntity<Error> handleImportValidationExc(ValidationException ex) {
@@ -62,13 +78,13 @@ public class RestResponseExceptionHandler {
     }
 
     @ExceptionHandler(value = NotFoundElementException.class)
-    protected  ResponseEntity<Error> handleElementNotFoundExc() {
+    protected ResponseEntity<Error> handleElementNotFoundExc() {
         Error error = new Error(HttpStatus.NOT_FOUND.value(), ExceptionMessageEnum.ELEMENT_NOT_FOUND.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(value = BadSizeIdException.class)
-    protected  ResponseEntity<Error> handleBadIdExc() {
+    protected ResponseEntity<Error> handleBadIdExc() {
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), ExceptionMessageEnum.BAD_ID_LENGTH.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }

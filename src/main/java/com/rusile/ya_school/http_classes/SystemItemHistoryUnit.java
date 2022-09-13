@@ -1,6 +1,7 @@
 package com.rusile.ya_school.http_classes;
 
 import com.rusile.ya_school.entity.SystemItem;
+import com.rusile.ya_school.entity.SystemItemHistory;
 import com.rusile.ya_school.entity.enums.Type;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,17 @@ public class SystemItemHistoryUnit {
         unit.setType(systemItem.getType());
         unit.setSize(systemItem.getSize());
         unit.setDate(systemItem.getDate());
+        return unit;
+    }
+
+    public static SystemItemHistoryUnit valueOf(SystemItemHistory itemHistory) {
+        SystemItemHistoryUnit unit = new SystemItemHistoryUnit();
+        unit.setId(itemHistory.getOwnerId());
+        unit.setUrl(itemHistory.getUrl());
+        unit.setParentId(itemHistory.getParentId());
+        unit.setType(itemHistory.getOwnerItem().getType());
+        unit.setSize(itemHistory.getSize());
+        unit.setDate(itemHistory.getDate());
         return unit;
     }
 }

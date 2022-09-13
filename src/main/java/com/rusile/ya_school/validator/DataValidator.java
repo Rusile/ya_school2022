@@ -3,14 +3,15 @@ package com.rusile.ya_school.validator;
 import com.rusile.ya_school.entity.SystemItem;
 import com.rusile.ya_school.entity.enums.Type;
 import com.rusile.ya_school.exception.BadSizeIdException;
+import com.rusile.ya_school.exception.IllegalDateIntervalException;
 import com.rusile.ya_school.exception.ValidationException;
 import com.rusile.ya_school.exception.messages.ExceptionMessageEnum;
 import com.rusile.ya_school.http_classes.SystemItemImport;
 import com.rusile.ya_school.http_classes.SystemItemImportRequest;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Component
 public class DataValidator {
@@ -73,7 +74,7 @@ public class DataValidator {
         }
 
         if ((parentInDB != null && parentInDB.getType().equals(Type.FILE)) || (parentInRequest != null && parentInRequest.getType().equals(Type.FILE))) {
-            return ExceptionMessageEnum.PARENT_FILE.getMessage();
+            return ExceptionMessageEnum.PARENT_IS_FILE.getMessage();
         }
 
         return null;
@@ -140,6 +141,12 @@ public class DataValidator {
     public void validateId(String id) {
         if (id.length() > 255) {
             throw new BadSizeIdException();
+        }
+    }
+
+    public void validateDates(Instant dateStart, Instant dateEnd) {
+        if (!dateStart.isBefore(dateEnd)) {
+            throw new IllegalDateIntervalException();
         }
     }
 }
