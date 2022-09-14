@@ -1,7 +1,6 @@
 package com.rusile.ya_school.service;
 
 import com.rusile.ya_school.dao.SystemItemHistoryRepository;
-import com.rusile.ya_school.entity.SystemItem;
 import com.rusile.ya_school.entity.SystemItemHistory;
 import com.rusile.ya_school.exception.NotFoundElementException;
 import com.rusile.ya_school.http_classes.SystemItemHistoryResponse;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
