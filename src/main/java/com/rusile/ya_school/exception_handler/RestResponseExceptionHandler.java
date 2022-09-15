@@ -8,6 +8,7 @@ import com.rusile.ya_school.exception.messages.ExceptionMessageEnum;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,11 +37,12 @@ public class RestResponseExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = {MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
+    @ExceptionHandler(value = {MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class, HttpRequestMethodNotSupportedException.class})
     protected ResponseEntity<Error> handleArgTypeExc(Exception ex) {
         Error error = new Error(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
 
     @ExceptionHandler(value = ValidationException.class)
     protected ResponseEntity<Error> handleImportValidationExc(ValidationException ex) {
