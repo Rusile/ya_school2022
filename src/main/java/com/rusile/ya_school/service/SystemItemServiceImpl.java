@@ -49,6 +49,7 @@ public class SystemItemServiceImpl implements SystemItemService {
 
     @Override
     public void imports(SystemItemImportRequest request) {
+        //getting all parents/folders from db
         Map<String, SystemItem> parents = systemItemRepository
                 .findAllById(request.getItems()
                         .stream()
@@ -56,6 +57,7 @@ public class SystemItemServiceImpl implements SystemItemService {
                         .toList())
                 .stream()
                 .collect(Collectors.toMap(SystemItem::getId, Function.identity()));
+        //getting all items from db that will be updated
         Map<String, SystemItem> updates = systemItemRepository
                 .findAllById(request.getItems()
                         .stream()
@@ -63,8 +65,8 @@ public class SystemItemServiceImpl implements SystemItemService {
                         .toList())
                 .stream()
                 .collect(Collectors.toMap(SystemItem::getId, Function.identity()));
-        validator.validateRequest(request, parents, updates);
 
+        validator.validateRequest(request, parents, updates);
         Set<SystemItem> requestSystemItems = toSystemItems(request);
 
         Instant date = request.getUpdateDate();
@@ -73,6 +75,7 @@ public class SystemItemServiceImpl implements SystemItemService {
 
         addRemainingFilesAndFolders(requestSystemItems, updates, date);
 
+        //saving all items that was updated
         systemItemHistoryService.save(systemItemRepository.findAllByDate(date).stream()
                 .map(SystemItemHistory::valueOf)
                 .collect(Collectors.toList()));
@@ -103,6 +106,13 @@ public class SystemItemServiceImpl implements SystemItemService {
         return response;
     }
 
+    /**
+     * After adding new folders, this method adds remaining items
+     *
+     * @param requestSystemItems all items from request
+     * @param date         date from request
+     * @param updates      all items from db that will be updated
+     */
     private void addRemainingFilesAndFolders(Set<SystemItem> requestSystemItems, Map<String, SystemItem> updates, Instant date) {
         for (SystemItem item : requestSystemItems) {
             String id = item.getId();
@@ -115,26 +125,34 @@ public class SystemItemServiceImpl implements SystemItemService {
                 long oldSize = oldItem.getSize();
                 if (item.getType().equals(Type.FOLDER)) {
                     item.setSize(oldSize);
-                    newSize=oldSize;
+                    newSize = oldSize;
                 }
                 if (!Objects.equals(newParentID, oldParentID)) {
                     if (newParentID != null) recursivelyUpdateNodes(newParentID, newSize, date);
                     if (oldParentID != null) recursivelyUpdateNodes(oldParentID, -oldSize, date);
-                //if (newParentID != null && !newParentID.equals(oldParentID) || (newParentID == null && oldParentID != null)) {
                 } else {
                     long offset = newSize - oldSize;
                     recursivelyUpdateNodes(newParentID, offset, date);
                 }
             } else {
+                // if it's not update we simply add new file (new folders were added)
                 if (item.getType().equals(Type.FILE))
                     recursivelyUpdateNodes(newParentID, newSize, date);
             }
+            // folders not from updates are ignored because they were added in previous method
             if (item.getType().equals(Type.FILE) || updates.containsKey(id))
                 systemItemRepository.save(item);
         }
     }
 
 
+    /**
+     * Adds all new folders from request
+     *
+     * @param requestItems all items from request
+     * @param date         date from request
+     * @param updates      all items from db that will be updated
+     */
     private void addNewFolders(Set<SystemItem> requestItems, Instant date, Map<String, SystemItem> updates) {
         for (SystemItem item : requestItems) {
             if (item.getType() == Type.FILE || updates.containsKey(item.getId())) {
@@ -159,6 +177,13 @@ public class SystemItemServiceImpl implements SystemItemService {
         }
     }
 
+    /**
+     * Recursively updates dates and sizes for all related folders
+     *
+     * @param parentId parentId of updated/added item
+     * @param offset   value that we need to add to the sizes
+     * @param date     date from request
+     */
     private void recursivelyUpdateNodes(String parentId, long offset, Instant date) {
         while (parentId != null) {
             Optional<SystemItem> opt = systemItemRepository.findById(parentId);
